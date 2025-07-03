@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مستشفى دار الشفاء - شات بوت</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        :root{--header-bg:#183D6F;--chat-bg:#F7F7F7;--bot-bubble-bg:#E0F5F4;--user-bubble-bg:#dcf8c6;--button-bg:#00A99D;--text-dark:#333;--text-light:#fff}body{font-family:'Tajawal',sans-serif;background-color:#e5e5e5;height:200vh}.chat-fab{position:fixed;bottom:30px;left:30px;width:65px;height:65px;background-color:var(--header-bg);border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:9998;transition:transform .3s ease;animation:pulse 2.5s infinite}.chat-fab:hover{transform:scale(1.1);animation-play-state:paused}.chat-fab img{width:100%;height:100%;border-radius:50%}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(24,61,111,.7)}70%{box-shadow:0 0 0 20px rgba(24,61,111,0)}100%{box-shadow:0 0 0 0 rgba(24,61,111,0)}}.chat-widget-container{position:fixed;bottom:110px;left:30px;z-index:9999;opacity:0;transform:translateY(30px) scale(.9);transform-origin:bottom left;visibility:hidden;transition:all .4s cubic-bezier(.25,1,.5,1)}.chat-widget-container.open{opacity:1;transform:translateY(0) scale(1);visibility:visible}.chatbot-container{width:380px;height:600px;background-color:var(--chat-bg);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden}.chat-header{background-color:var(--header-bg);color:var(--text-light);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:relative}.header-info{display:flex;align-items:center;gap:12px}.header-info .avatar{width:40px;height:40px;border-radius:50%;background-color:white;border:2px solid var(--button-bg)}.header-title h3{margin:0;font-size:16px;font-weight:700}.header-title span{font-size:12px;opacity:.9}.close-btn{background:0 0;border:none;color:white;font-size:30px;cursor:pointer;position:absolute;left:15px;top:50%;transform:translateY(-50%)}.chat-messages{flex-grow:1;padding:10px 20px;overflow-y:auto}.message{margin-bottom:20px;display:flex;flex-direction:column}.message-bubble{padding:12px 18px;border-radius:25px;max-width:85%;word-wrap:break-word;line-height:1.6;color:var(--text-dark)}.bot-message .message-bubble{background-color:var(--bot-bubble-bg);border-bottom-right-radius:8px;align-self:flex-start}.user-message .message-bubble{background-color:var(--user-bubble-bg);border-bottom-left-radius:8px;align-self:flex-end}.timestamp{font-size:11px;color:#999;margin-top:6px}.bot-message .timestamp{align-self:flex-start;margin-right:10px}.user-message .timestamp{align-self:flex-end;margin-left:10px}.action-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px;justify-content:flex-start}.action-buttons button{background-color:var(--button-bg);border:none;color:var(--text-light);padding:8px 20px;border-radius:30px;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:500;font-size:14px;transition:transform .2s}.action-buttons button:hover{transform:scale(1.05)}.chat-input-area{display:flex;padding:15px 20px;background-color:#fff;border-top:1px solid #e0e0e0}.chat-input-area input{flex-grow:1;border:none;background-color:transparent;padding:10px;font-size:15px;font-family:'Tajawal',sans-serif}.chat-input-area input:focus{outline:0}.chat-input-area button{background-color:var(--button-bg);border:none;color:white;border-radius:50%;width:48px;height:48px;font-size:22px;margin-right:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color .3s}.chat-input-area button:hover{background-color:#008a7e}
+    </style>
+</head>
+<body>
+    
+    <div class="chat-widget-container" id="chat-widget">
+        <div class="chatbot-container">
+            <div class="chat-header">
+                <div class="close-btn" id="close-chatbot-btn">&times;</div>
+                <div class="header-info">
+                    <div class="header-title"><h3>مستشفى دار الشفاء</h3><span>متصل الآن</span></div>
+                    <div class="avatar"></div>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-area">
+                <button id="send-btn">➤</button>
+                <input type="text" id="user-input" placeholder="اسأل...">
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-fab" id="chat-fab">
+        <img src="https://sp.labibabot.com//Images/WebImages/b97cc884-e8ea-4f3c-a004-000c78d20bd1.jpg" alt="Chat Icon">
+    </div>
+
+    <script>
+        const chatWidget = document.getElementById('chat-widget');
+        const fab = document.getElementById('chat-fab');
+        const closeBtn = document.getElementById('close-chatbot-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        // ✨ ضع رابط الويب آب الذي نسخته هنا ✨
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0VnqwpbwC_T3JM928brKT7UnRIjPAiLBOqrGYVot5c8592OKvhItvzqwSDqBl6SHq/exec';
+        let chatTree = {};
+        let initialLoad = false;
+        let currentNodeId = null; 
+
+        // --- Inactivity Timer Logic ---
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                chatWidget.classList.remove('open'); 
+            }, 30000); 
+        }
+
+        function toggleChatbot() {
+            const isOpen = chatWidget.classList.toggle('open');
+            if (isOpen) {
+                resetInactivityTimer();
+            } else {
+                clearTimeout(inactivityTimer); 
+            }
+        }
+
+        fab.addEventListener('click', toggleChatbot);
+        closeBtn.addEventListener('click', toggleChatbot);
+        
+        async function loadChat() {
+            if (initialLoad) return;
+            initialLoad = true;
+            addMessage('bot', 'الرجاء الانتظار، جاري تحميل المحادثة...');
+            try {
+                const response = await fetch(SCRIPT_URL);
+                chatTree = await response.json();
+                chatMessages.innerHTML = ''; 
+                navigateTo('welcome');
+            } catch (error) {
+                addMessage('bot', 'عفواً، حدث خطأ أثناء تحميل الحوار.');
+                console.error("Error fetching chat tree:", error);
+            }
+        }
+        
+        fab.addEventListener('click', loadChat, { once: true });
+
+        function navigateTo(nodeId) {
+            currentNodeId = nodeId; 
+            const node = chatTree[nodeId];
+            if (!node) return;
+            const buttons = node.ButtonsJSON || [];
+            addMessage('bot', node.MessageText, buttons);
+            userInput.disabled = node.MessageType !== 'text';
+            if (!userInput.disabled) userInput.focus();
+        }
+
+        function handleOptionClick(action, link = null) {
+            resetInactivityTimer(); 
+            if (link) {
+                window.open(link, '_blank'); 
+            }
+            const userChoiceText = event.target.innerText;
+            addMessage('user', userChoiceText);
+            const allButtons = document.querySelectorAll('.action-buttons');
+            allButtons.forEach(buttonSet => buttonSet.remove());
+            if (!link) { 
+                setTimeout(() => navigateTo(action), 500);
+            }
+        }
+
+        // --- ✨ UPDATED handleSend Function ✨ ---
+        function handleSend() {
+            resetInactivityTimer(); 
+            const userText = userInput.value.trim();
+            if (userText === "") return;
+            addMessage('user', userText);
+            userInput.value = '';
+
+            // --- Context-aware reply logic ---
+            // If the user was asked for their name, now ask for their phone
+            if (currentNodeId === 'request_user_name') {
+                setTimeout(() => {
+                    navigateTo('request_user_phone');
+                }, 500);
+            } 
+            // If the user was asked for their phone, now confirm the booking
+            else if (currentNodeId === 'request_user_phone') {
+                setTimeout(() => {
+                    navigateTo('booking_confirmation');
+                }, 500);
+            }
+            else {
+                // Default reply for other text inputs
+                setTimeout(() => {
+                    addMessage('bot', 'شكرًا لك، تم استلام رسالتك.');
+                }, 1500);
+            }
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        function addMessage(sender, text, buttons = []) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'bot-message'}`;
+            let buttonsHTML = '';
+            if (buttons.length > 0) {
+                buttonsHTML = '<div class="action-buttons">';
+                buttons.forEach(button => {
+                    if (button.link) {
+                        buttonsHTML += `<button onclick="handleOptionClick(null, '${button.link}')">${button.text}</button>`;
+                    } else {
+                        buttonsHTML += `<button onclick="handleOptionClick('${button.goToID}')">${button.text}</button>`;
+                    }
+                });
+                buttonsHTML += '</div>';
+            }
+            const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true });
+            messageDiv.innerHTML = `<div class="message-bubble">${text} ${buttonsHTML}</div><div class="timestamp">${time}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
