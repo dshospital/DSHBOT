@@ -10,29 +10,25 @@
 
         /* --- ✨ Responsive Design for Mobile & Tablets ✨ --- */
         @media (max-width: 768px) {
-            /* Make the widget container cover the full screen */
             .chat-widget-container {
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                transform-origin: bottom center; /* Change animation origin */
+                /* Position the widget with margins on mobile */
+                left: 10px;
+                right: 10px;
+                bottom: 90px;
+                width: auto; /* Let it be defined by left/right margins */
+                max-width: 400px;
+                margin: 0 auto; /* Center on larger tablets if there's space */
             }
 
-            /* Make the chatbot itself fill the container */
             .chatbot-container {
-                width: 100%;
-                height: 100%;
-                border-radius: 0; /* Remove rounded corners on mobile */
-                box-shadow: none; /* No shadow needed in full screen */
+                /* Limit the height on mobile */
+                height: 70vh; /* 70% of the viewport height */
+                max-height: 600px;
             }
 
-            /* Adjust FAB position for mobile */
             .chat-fab {
                 bottom: 20px;
                 left: 20px;
-                width: 60px;
-                height: 60px;
             }
         }
     </style>
@@ -178,7 +174,7 @@
                     if (button.link) {
                         buttonsHTML += `<button onclick="handleOptionClick(null, '${button.link}')">${button.text}</button>`;
                     } else {
-                        buttonsHTML += `<button onclick="handleOptionC'lick('${button.goToID}')">${button.text}</button>`;
+                        buttonsHTML += `<button onclick="handleOptionClick('${button.goToID}')">${button.text}</button>`;
                     }
                 });
                 buttonsHTML += '</div>';
